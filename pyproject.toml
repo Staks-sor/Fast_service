@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "fast-service"
+version = "0.1.0"
+description = ""
+authors = ["ilya-4real <ilya.chernishyov@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.7"
+fastapi = "^0.110.0"
+sqlalchemy = "^2.0.28"
+
+
+[tool.poetry.group.dev.dependencies]
+uvicorn = "^0.28.0"
+pytest = "^8.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
