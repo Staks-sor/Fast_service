@@ -9,6 +9,14 @@ readme = "README.md"
 python = "3.11.7"
 fastapi = "^0.110.0"
 sqlalchemy = "^2.0.28"
+pydantic-settings = "^2.2.1"
+alembic = "^1.13.1"
+psycopg-binary = "^3.1.18"
+psycopg = "^3.1.18"
+pydantic = {extras = ["email"], version = "^2.6.4"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-multipart = "^0.0.9"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
 
 [tool.poetry.group.dev.dependencies]
