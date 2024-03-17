@@ -1,22 +1,25 @@
 from typing import Dict, Optional, Literal
+from datetime import timedelta, datetime, UTC
+
 from fastapi import HTTPException, Request, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.openapi.models import OAuthFlowPassword
-from datetime import timedelta, datetime, UTC
-from jose import jwt, JWTError
+
+import jwt
+import bcrypt
+
 from src.config import settings
 from src.auth.schemas import UserToken
-import bcrypt
 
 
 class OAuthPasswordWithCookie(OAuth2):
     def __init__(
-        self,
-        tokenUrl: str,
-        scheme_name: str | None = None,
-        scopes: Optional[Dict[str, str]] = None,
-        auto_error: bool = True,
+            self,
+            tokenUrl: str,
+            scheme_name: str | None = None,
+            scopes: Optional[Dict[str, str]] = None,
+            auto_error: bool = True,
     ):
         if not scopes:
             scopes = {}
@@ -41,7 +44,7 @@ class OAuthPasswordWithCookie(OAuth2):
 
 
 def generate_token(
-    user_uuid: str, expires_in_minutes: int, type: Literal["access", "refresh"]
+        user_uuid: str, expires_in_minutes: int, type: Literal["access", "refresh"]
 ):
     expires = timedelta(minutes=expires_in_minutes)
     payload = {"uuid": user_uuid, "exp": datetime.now(UTC) + expires}
@@ -62,7 +65,7 @@ def decode_token(token: str, type: Literal["access", "refresh"]):
             payload = jwt.decode(
                 token, settings.jwt_refresh_secret, settings.jwt_algorithm
             )
-    except JWTError as e:
+    except jwt.InvalidTokenError as e:
         print(e, type)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="invalid token"
@@ -73,12 +76,12 @@ def decode_token(token: str, type: Literal["access", "refresh"]):
 
 
 def hash_password(password: str):
-    password_encoded = password.encode("utf-8")
+    password_encoded = password.encode()
     salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password_encoded, salt=salt).decode("utf-8")
+    return bcrypt.hashpw(password_encoded, salt=salt).decode()
 
 
 def check_password(plain_password: str, hashed_password: str):
     return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        plain_password.encode(), hashed_password.encode()
     )
