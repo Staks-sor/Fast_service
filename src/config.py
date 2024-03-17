@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     @property
     def postgres_dsn(self):
-        return f"postgresql+psycopg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        return f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
 
 settings = Settings()  # type: ignore
