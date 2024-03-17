@@ -7,19 +7,19 @@ class UoWInterface(ABC):
     users: UserRepository
 
     @abstractmethod
-    async def __aenter__():
+    async def __aenter__(self):
         raise NotImplementedError
 
     @abstractmethod
-    async def __aexit__():
+    async def __aexit__(self):
         raise NotImplementedError
 
     @abstractmethod
-    async def commit():
+    async def commit(self):
         raise NotImplementedError
 
     @abstractmethod
-    async def rollback():
+    async def rollback(self):
         raise NotImplementedError
 
 
