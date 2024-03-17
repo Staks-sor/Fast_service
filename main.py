@@ -3,7 +3,7 @@ from src.auth.router import router as auth_router
 import uvicorn
 
 app = FastAPI(
-    title="Auto-sevice app",
+    title="Auto-service app",
     description="this app is supposed to help auto mechanics do their job",
 )
 

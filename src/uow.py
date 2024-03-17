@@ -15,11 +15,11 @@ class UoWInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def commit():
+    async def commit(self):
         raise NotImplementedError
 
     @abstractmethod
-    async def rollback():
+    async def rollback(self):
         raise NotImplementedError
 
 
