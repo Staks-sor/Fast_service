@@ -27,11 +27,10 @@ class UoW(UoWInterface):
     def __init__(self) -> None:
         self.sessionmaker = session
 
-    async def __aenter__(
-        self,
-    ):
+    async def __aenter__(self):
         self.session = self.sessionmaker()
         self.users = UserRepository(self.session)
+        return self
 
     async def __aexit__(self, *args):
         await self.rollback()

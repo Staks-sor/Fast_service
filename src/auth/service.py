@@ -1,13 +1,16 @@
 from typing import NamedTuple
+from datetime import datetime, UTC
 from uuid import UUID
+
 from fastapi import HTTPException, status
-from src.auth.schemas import UserCreateSchema, UserResponce
-from src.uow import UoW, UoWInterface
 from fastapi.security import OAuth2PasswordRequestForm
+
+from src.auth.schemas import UserCreateSchema, UserResponse
 from src.auth.models import User
 from src.auth import utils
+
+from src.service import Service
 from src.config import settings
-from datetime import datetime, UTC
 
 
 class Tokens(NamedTuple):
@@ -15,25 +18,26 @@ class Tokens(NamedTuple):
     refresh_token: str
 
 
-class AuthService:
-    async def add_user(self, user: UserCreateSchema, uow: UoW):
+class AuthService(Service):
+    @classmethod
+    async def add_user(cls, user: UserCreateSchema):
         user_dict = {"name": user.name, "email": user.email}
-        print(user.password)
         hashed_pass = utils.hash_password(user.password)
         user_dict["hashed_password"] = hashed_pass
-        async with uow:
+
+        async with cls.get_uow() as uow:
             await uow.users.add_one(user_dict)
             await uow.commit()
 
-    async def get_user(self, uuid: str, uow: UoW):
-        async with uow:
+    @classmethod
+    async def get_user(cls, uuid: str):
+        async with cls.get_uow() as uow:
             user = await uow.users.get_one(User.id, uuid)
-            return UserResponce.model_validate(user)
+            return UserResponse.model_validate(user)
 
-    async def authenticate_user(
-        self, credentials: OAuth2PasswordRequestForm, uow: UoW
-    ) -> Tokens:
-        async with uow:
+    @classmethod
+    async def authenticate_user(cls, credentials: OAuth2PasswordRequestForm) -> Tokens:
+        async with cls.get_uow() as uow:
             user = await uow.users.get_one(User.email, credentials.username)
             user_id = user.id
             if not utils.check_password(credentials.password, user.hashed_password):
@@ -51,8 +55,9 @@ class AuthService:
             await uow.commit()
             return Tokens(access_token, refresh_token)
 
-    async def refresh_tokens(self, refresh_token: str, uow: UoW):
-        async with uow:
+    @classmethod
+    async def refresh_tokens(cls, refresh_token: str):
+        async with cls.get_uow() as uow:
             user = await uow.users.get_one(User.refresh_token, refresh_token)
             user_id = user.id
             if not user:
@@ -74,7 +79,8 @@ class AuthService:
             await uow.commit()
             return Tokens(new_access_token, new_refresh_token)
 
-    async def abort_refresh_token(self, user_id: UUID, uow: UoW):
-        async with uow:
+    @classmethod
+    async def abort_refresh_token(cls, user_id: UUID):
+        async with cls.get_uow() as uow:
             await uow.users.update_one(User.id, user_id, refresh_token="")
             await uow.commit()
