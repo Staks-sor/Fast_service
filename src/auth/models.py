@@ -1,7 +1,9 @@
+from uuid import UUID, uuid4
+
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
+
 from src.database import Base
-from uuid import UUID, uuid4
 
 
 class User(Base):
@@ -14,3 +16,6 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     refresh_token: Mapped[str] = mapped_column(nullable=True)
+
+    def __repr__(self):
+        return f"User({self.name=}, {self.email=}, Admin: {self.is_admin}, Active: {self.is_active})"
