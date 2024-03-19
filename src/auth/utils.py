@@ -59,11 +59,11 @@ def decode_token(token: str, type: Literal["access", "refresh"]):
     try:
         if type == "access":
             payload = jwt.decode(
-                token, settings.jwt_access_secret, settings.jwt_algorithm
+                token, settings.jwt_access_secret, [settings.jwt_algorithm]
             )
         else:
             payload = jwt.decode(
-                token, settings.jwt_refresh_secret, settings.jwt_algorithm
+                token, settings.jwt_refresh_secret, [settings.jwt_algorithm]
             )
     except jwt.InvalidTokenError as e:
         print(e, type)
