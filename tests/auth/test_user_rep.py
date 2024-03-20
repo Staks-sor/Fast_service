@@ -1,59 +1,105 @@
+from uuid import uuid4
+
 import pytest
+from faker import Faker
+from sqlalchemy import insert, select, text
 
 from src.auth.models import User
 from src.auth.schemas import UserCreateSchema
 from src.auth.user_rep import UserRepository
-from sqlalchemy import insert, text, select
-
 from tests.auth.conftest import session_maker
 
-@pytest.fixture
-def user_dict_ready_for_insert():
-    return {'id':'7d5d45d0-80e8-45fa-97d0-ed74f5ac0b85','name': 'german', 'email': 'german@mail.com', 'hashed_password': 'SDLFVSDOIJFkmdsfa24'}
+fake = Faker()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
+async def inserted_user():
+    user = {
+        "id": str(uuid4()),
+        "name": fake.name(),
+        "email": fake.email(),
+        "hashed_password": "SDLFVSDOIJFkmdsfa24",
+    }
+    async with session_maker() as session:
+        stmt = insert(User).values(user)
+        await session.execute(stmt)
+        await session.commit()
+    return user["id"]
+
+
+@pytest.fixture(scope="function")
 def users():
     users = [
-        UserCreateSchema(name='vasyok', email='vasya@mail.com', password='pass1234'),
-        UserCreateSchema(name='andrey', email='andr@mail.com', password='pass1234'),
-        UserCreateSchema(name='kirill', email='kirill@mail.com', password='pass1234'),
-
+        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
+        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
+        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
     ]
     return users
 
-@pytest.mark.usefixtures("create_tables")
-async def test_add_user(users):
-    async with session_maker() as s:
-        for user in users:
-            user_dict = user.model_dump(exclude='password')
-            user_dict['hashed_password'] = 'psdafasdf'
-            await UserRepository(s).add_one(user_dict)
 
-        stmt = text('select count(*) from "user";')
-        res = await s.execute(stmt)
-
-        assert len(users) == res.scalar_one()
-
-
-@pytest.mark.usefixtures("create_tables")
-async def test_update_user(user_dict_ready_for_insert):
-    new_name = 'georgiy'
-    new_email = 'georgiy@mail.com'
-
+@pytest.fixture
+async def inserted_users(create_tables):
+    number_of_users = 3
     async with session_maker() as session:
-        stmt = insert(User).values(user_dict_ready_for_insert)
-        await session.execute(stmt)
+        clean_up_table_stmt = text('truncate table "user";')
+        await session.execute(clean_up_table_stmt)
+        await session.commit()
 
-        await UserRepository(session).update_one(
-            User.name, 
-            'german', 
-            name=new_name, 
-            email=new_email
+        for i in range(number_of_users):
+            stmt = insert(User).values(
+                {
+                    "name": fake.name(),
+                    "email": fake.email(),
+                    "hashed_password": fake.password(),
+                }
             )
-        
-        query = select(User).where(User.id ==user_dict_ready_for_insert['id'])
-        result = await session.execute(query)
-        user = result.scalar_one()
-        assert user.name == new_name
-        assert user.email == new_email
+            await session.execute(stmt)
+            await session.commit()
+    return number_of_users
+
+
+@pytest.mark.usefixtures("create_tables")
+class TestUserRepsitory:
+
+    async def test_add_user(self, users):
+        async with session_maker() as s:
+            for user in users:
+                user_dict = user.model_dump(exclude="password")
+                user_dict["hashed_password"] = "psdafasdf"
+                await UserRepository(s).add_one(user_dict)
+
+            stmt = text('select count(*) from "user";')
+            res = await s.execute(stmt)
+
+            assert len(users) == res.scalar_one()
+
+    async def test_update_user(self, inserted_user):
+        new_name = "georgiy"
+        new_email = "georgiy@mail.com"
+
+        async with session_maker() as session:
+
+            await UserRepository(session).update_one(
+                User.id, inserted_user, name=new_name, email=new_email
+            )
+
+            query = select(User).where(User.id == inserted_user)
+            result = await session.execute(query)
+            user = result.scalar_one()
+            assert user.name == new_name
+            assert user.email == new_email
+
+    async def test_user_delete(self, inserted_user):
+        async with session_maker() as session:
+            await UserRepository(session).delete_one(inserted_user)
+
+            query = select(User).where(User.id == inserted_user)
+            result = await session.execute(query)
+
+            assert result.scalar_one_or_none() is None
+
+    async def test_get_all_users(self, inserted_users):
+        async with session_maker() as session:
+            users_in_repo = await UserRepository(session).get_all()
+
+            assert len(users_in_repo) == inserted_users
