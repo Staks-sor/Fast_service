@@ -1,17 +1,16 @@
-from src.database import session
+from abc import abstractmethod
+
 from src.auth.user_rep import UserRepository
-from abc import ABC, abstractmethod
+from src.database import session
 
 
-class UoWInterface(ABC):
+class UoWInterface:
     users: UserRepository
 
-    @abstractmethod
     async def __aenter__(self):
         raise NotImplementedError
 
-    @abstractmethod
-    async def __aexit__(self):
+    async def __aexit__(self, *args):
         raise NotImplementedError
 
     @abstractmethod

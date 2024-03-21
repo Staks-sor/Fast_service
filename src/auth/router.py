@@ -14,16 +14,17 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/register")
-async def register_user(user: UserCreateSchema):
-    await AuthService.add_user(user)  # type: ignore
+async def register_user(user: UserCreateSchema, uow: UowDep):
+    await AuthService.add_user(user, uow)
 
 
 @router.post("/login")
 async def log_user_in(
-        credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
-        response: Response
+    credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
+    response: Response,
+    uow: UowDep,
 ):
-    tokens = await AuthService.authenticate_user(credentials)  # type: ignore
+    tokens = await AuthService.authenticate_user(credentials, uow)
     if tokens:
         response.set_cookie(
             key="access_token",
@@ -40,13 +41,13 @@ async def log_user_in(
 
 
 @router.post("/refresh")
-async def refresh_tokens(request: Request, response: Response):
+async def refresh_tokens(request: Request, response: Response, uow: UowDep):
     current_token = request.cookies.get("refresh_token")
 
     if not current_token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="invalid token")
 
-    new_tokens = await AuthService.refresh_tokens(current_token)
+    new_tokens = await AuthService.refresh_tokens(current_token, uow)
 
     response.set_cookie(
         key="access_token",
@@ -64,10 +65,11 @@ async def refresh_tokens(request: Request, response: Response):
 
 @router.post("/abort")
 async def abort_refresh_token(
-        response: Response,
-        user: UserResponse = Depends(get_current_user),
+    response: Response,
+    uow: UowDep,
+    user: UserResponse = Depends(get_current_user),
 ):
-    await AuthService.abort_refresh_token(user.id)
+    await AuthService.abort_refresh_token(user.id, uow)
 
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")

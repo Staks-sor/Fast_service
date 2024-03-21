@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar, Sequence
+from typing import Generic, TypeVar, Sequence, Any
 from abc import ABC, abstractmethod
 
 from sqlalchemy import delete, insert, select, update
@@ -37,7 +37,7 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def add_one(self, data: dict):
+    async def add_one(self, data: dict[str, Any]):
         stmt = insert(self.model).values(**data).returning(self.model.id)  # type: ignore
         result = await self.session.execute(stmt)
         return result.scalar_one()
