@@ -1,7 +1,10 @@
 .python-version
 .venv
 .idea
-**/.env**
+**/.env
+**/.test.env
 **__pycache__**
 **cache**
 .vscode
+Makefile
+htmlcov

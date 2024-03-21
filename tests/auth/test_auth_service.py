@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import bcrypt
@@ -13,6 +14,8 @@ from src.auth.schemas import UserCreateSchema
 from src.auth.service import AuthService
 from src.config import settings
 from src.uow import UoW
+
+fake_jwt_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 
 
 class FakeUserModel(BaseModel):
@@ -53,7 +56,6 @@ class FakeUserRepository:
 
 
 class FakeUoW:
-
     def __init__(self) -> None:
         self._commit = False
         self.users = FakeUserRepository()
@@ -70,10 +72,13 @@ class FakeUoW:
         await self.rollback()
 
 
-class TestAuthService:
-    uow = FakeUoW()
+@pytest.fixture(scope="function")
+async def fake_uow():
+    return FakeUoW()
 
-    async def test_add_user(self):
+
+class TestAuthService:
+    async def test_add_user(self, fake_uow):
         user_id = uuid4()
         user_name = fake.name()
         user_email = fake.email()
@@ -82,15 +87,15 @@ class TestAuthService:
             id=user_id, name=user_name, email=user_email, password=user_password
         )
 
-        await AuthService.add_user(new_user, self.uow)  # type: ignore
+        await AuthService.add_user(new_user, fake_uow)  # type: ignore
 
-        assert len(self.uow.users._users) == 1
-        assert self.uow.users._users[user_id]["name"] == user_name
-        assert self.uow.users._users[user_id]["email"] == user_email
-        encrypted_pass = self.uow.users._users[user_id]["hashed_password"]
+        assert len(fake_uow.users._users) == 1
+        assert fake_uow.users._users[user_id]["name"] == user_name
+        assert fake_uow.users._users[user_id]["email"] == user_email
+        encrypted_pass = fake_uow.users._users[user_id]["hashed_password"]
         assert bcrypt.checkpw(new_user.password.encode(), encrypted_pass.encode())
 
-    async def test_get_user(self):
+    async def test_get_user(self, fake_uow):
         user_id = uuid4()
         user_name = fake.name()
         user_email = fake.email()
@@ -100,32 +105,68 @@ class TestAuthService:
             "email": user_email,
             "is_active": True,
         }
-        self.uow.users._users[str(user_id)] = created_user
+        fake_uow.users._users[str(user_id)] = created_user
 
-        user_from_service = await AuthService.get_user(str(user_id), self.uow)  # type: ignore
+        user_from_service = await AuthService.get_user(str(user_id), fake_uow)  # type: ignore
         assert user_from_service.id == user_id
         assert user_from_service.email == user_email
         assert user_from_service.name == user_name
 
-    async def test_successful_authenticate_user(self):
+    async def test_successful_authenticate_user(self, fake_uow):
         user_id = str(uuid4())
         user_name = fake.name()
         salt = bcrypt.gensalt()
         user_pass = "pass1234"
         user_pass_hashed = bcrypt.hashpw(user_pass.encode(), salt).decode()
         credentials = OAuth2PasswordRequestForm(username=user_name, password=user_pass)
-        self.uow.users._users[user_name] = FakeUserModel(
+        fake_uow.users._users[user_name] = FakeUserModel(
             id=user_id, hashed_password=user_pass_hashed
         )
 
-        tokens = await AuthService.authenticate_user(credentials, self.uow)  # type: ignore
+        tokens = await AuthService.authenticate_user(credentials, fake_uow)  # type: ignore
         payload = jwt.decode(
             tokens.refresh_token, settings.jwt_refresh_secret, [settings.jwt_algorithm]
         )
         assert payload["uuid"] == user_id
         assert uow.commit
 
-    async def test_fail_authenticate_user(self):
+    async def test_fail_authenticate_user(self, fake_uow):
         with pytest.raises(HTTPException):
             credentials = OAuth2PasswordRequestForm(username="fake", password="pass")
-            await AuthService.authenticate_user(credentials, self.uow)  # type: ignore
+            await AuthService.authenticate_user(credentials, fake_uow)  # type: ignore
+
+    async def test_fake_refresh_tokens(self, fake_uow):
+        with pytest.raises(HTTPException):
+            await AuthService.refresh_tokens(fake_jwt_token, fake_uow)  # type: ignore
+
+    async def test_expired_refresh_tokens(self, fake_uow):
+        local_uow = FakeUoW()
+        user_id = uuid4()
+        expiration = datetime.now() - timedelta(days=1)
+        user_dict = {"uuid": str(user_id), "exp": expiration}
+        prepared_token = jwt.encode(user_dict, settings.jwt_refresh_secret)
+
+        local_uow.users._users[prepared_token] = FakeUserModel(
+            id=str(user_id), hashed_password="safssoiionsv"
+        )
+
+        with pytest.raises(HTTPException):
+            await AuthService.refresh_tokens(prepared_token, local_uow)  # type: ignore
+
+    async def test_no_refresh_token_in_storage(self, fake_uow):
+        prepared_token = jwt.encode(
+            {"uuid": str(uuid4()), "exp": datetime.now() + timedelta(days=1)},
+            settings.jwt_refresh_secret,
+        )
+        fake_uow.users._users[prepared_token] = None
+
+        with pytest.raises(HTTPException):
+            await AuthService.refresh_tokens(prepared_token, fake_uow)
+
+    async def test_abort_token(self, fake_uow):
+        fake_record = fake.name()
+        user_id = uuid4()
+        fake_uow.users._users[str(user_id)] = fake_record
+
+        await AuthService.abort_refresh_token(user_id, fake_uow)
+        assert fake_uow.users._users[user_id]["refresh_token"] == ""
