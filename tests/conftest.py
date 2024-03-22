@@ -1,3 +1,7 @@
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
+
+import jwt
 import pytest
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -23,3 +27,22 @@ async def create_tables():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(scope="session")
+def access_token() -> str:
+    payload = {
+        "uuid": str(uuid4()),
+        "exp": datetime.now(UTC) + timedelta(minutes=settings.access_token_expiration),
+    }
+    return jwt.encode(payload, settings.jwt_access_secret)
+
+
+@pytest.fixture(scope="session")
+def refresh_token():
+    user_id = str(uuid4())
+    payload = {
+        "uuid": user_id,
+        "exp": datetime.now(UTC) + timedelta(days=settings.refresh_token_expiration),
+    }
+    return jwt.encode(payload, settings.jwt_refresh_secret), user_id

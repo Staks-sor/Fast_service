@@ -163,6 +163,32 @@ class TestAuthService:
         with pytest.raises(HTTPException):
             await AuthService.refresh_tokens(prepared_token, fake_uow)
 
+    async def test_successful_refresh_tokens(self, fake_uow, refresh_token):
+        user_id = refresh_token[1]
+        fake_uow.users._users[user_id] = FakeUserModel(
+            id="unknown", hashed_password="strongly hashed"
+        )
+
+        tokens = await AuthService.refresh_tokens(refresh_token[0], fake_uow)
+
+        access_payload = jwt.decode(
+            tokens.access_token, settings.jwt_access_secret, [settings.jwt_algorithm]
+        )
+
+        refresh_payload = jwt.decode(
+            tokens.refresh_token, settings.jwt_refresh_secret, [settings.jwt_algorithm]
+        )
+
+        assert (
+            datetime.now().minute - datetime.fromtimestamp(access_payload["exp"]).minute
+            <= settings.access_token_expiration
+        )
+
+        assert (
+            datetime.now().day - datetime.fromtimestamp(refresh_payload["exp"]).day
+            <= settings.refresh_token_expiration
+        )
+
     async def test_abort_token(self, fake_uow):
         fake_record = fake.name()
         user_id = uuid4()

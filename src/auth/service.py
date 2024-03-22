@@ -82,5 +82,5 @@ class AuthService:
     @classmethod
     async def abort_refresh_token(cls, user_id: UUID, uow: UoWInterface):
         async with uow as uow:
-            await uow.users.update_one(User.id, user_id, refresh_token="")
+            await uow.users.update_one(User.id, user_id, refresh_token=None)
             await uow.commit()
