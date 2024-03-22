@@ -1,0 +1,60 @@
+import flet as ft
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+def main(page: ft.Page):
+    page.title = "Главная"
+
+    dlg = ft.AlertDialog(adaptive=True,
+                         title=ft.Text("Регистрация", text_align="center"),
+                         modal=True,
+                         actions=[
+                             ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9),
+                             ft.TextField(hint_text="Телефон", scale=0.9),
+                             ft.TextField(hint_text="Пароль", password=True, scale=0.9),
+                             ft.TextField(hint_text="говно", scale=0.9),
+                             ft.CupertinoActionSheetAction(
+                                    content=ft.Text("Зарегестрироваться")),
+                         ]
+                         )
+
+    def open_reg(e):
+        page.dialog = dlg
+        dlg.open = True
+        page.update()
+
+    def route_change(route, login_function=None, registration_function=None, check_item_clicked=None):
+        page.views.clear()
+        page.views.append(
+            ft.View(
+                "/",
+                [
+                    ft.AppBar(
+                        title=ft.Text("Автосервис"),
+                        bgcolor=ft.colors.SURFACE_VARIANT,
+                        actions=[
+                            ft.IconButton(ft.icons.WB_SUNNY_OUTLINED),
+                            ft.OutlinedButton(content=ft.Text("Регистрация"), on_click=open_reg, scale=0.9),
+                            ft.OutlinedButton(content=ft.Text("Вход"), scale=0.9)
+                        ],
+
+                    ),
+                ],
+            )
+        )
+
+        page.update()
+
+    def view_pop(view):
+        page.views.pop()
+        top_view = page.views[-1]
+        page.go(top_view.route)
+
+    page.on_route_change = route_change
+    page.on_view_pop = view_pop
+    page.go(page.route)
+
+
+ft.app(target=main, view=ft.AppView.WEB_BROWSER)
