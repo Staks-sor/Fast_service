@@ -9,7 +9,7 @@ def main(page: ft.Page):
 
     dlg_reg_user = ft.AlertDialog(adaptive=True,
                          title=ft.Text("Регистрация", text_align="center"),
-                         modal=True,
+
                          actions=[
                              ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9),
                              ft.TextField(hint_text="Телефон", scale=0.9),
