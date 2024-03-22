@@ -29,20 +29,23 @@ async def create_tables():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture(scope="session")
-def access_token() -> str:
+@pytest.fixture(scope="function")
+def access_token() -> tuple[str, str]:
+    user_id = str(uuid4())
     payload = {
-        "uuid": str(uuid4()),
+        "uuid": user_id,
         "exp": datetime.now(UTC) + timedelta(minutes=settings.access_token_expiration),
     }
-    return jwt.encode(payload, settings.jwt_access_secret)
+    return jwt.encode(payload, settings.jwt_access_secret), user_id
 
 
-@pytest.fixture(scope="session")
-def refresh_token():
-    user_id = str(uuid4())
+@pytest.fixture(scope="function")
+def refresh_token(access_token):
+    _, user_id = access_token
     payload = {
         "uuid": user_id,
         "exp": datetime.now(UTC) + timedelta(days=settings.refresh_token_expiration),
     }
-    return jwt.encode(payload, settings.jwt_refresh_secret), user_id
+    return jwt.encode(
+        payload, settings.jwt_refresh_secret, settings.jwt_algorithm
+    ), user_id

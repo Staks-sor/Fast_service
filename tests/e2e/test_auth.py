@@ -36,8 +36,9 @@ def hashed_password(password):
 
 @pytest.fixture
 def created_user(hashed_password, refresh_token):
+    refresh_token, user_id = refresh_token
     return UserModel(
-        id=str(uuid4()),
+        id=user_id,
         name=fake.name(),
         email=fake.email(),
         hashed_password=hashed_password,
@@ -71,7 +72,7 @@ async def inserted_user(create_tables, created_user):
         "is_active": created_user.is_admin,
         "refresh_token": created_user.refresh_token,
     }
-
+    print(created_user.refresh_token)
     query = text(
         """insert into "user"(id, name, email, hashed_password, is_admin, is_active, refresh_token) 
         values(:id, :name, :email, :hashed_password, :is_admin, :is_active, :refresh_token)"""
@@ -128,9 +129,10 @@ async def test_successful_login(
 async def test_successful_refresh_tokens(
     create_tables, access_token, refresh_token, client, inserted_user, created_user
 ):
-    client.cookies.set("access_token", access_token)
+    client.cookies.set("access_token", access_token[0])
     client.cookies.set("refresh_token", refresh_token[0])
-
+    print(refresh_token[0])
+    print(client.cookies.get("refresh_token"))
     responce = await client.post("/auth/refresh")
     assert responce.status_code == 200
 
@@ -141,26 +143,14 @@ async def test_without_token_refresh_tokens(create_tables, client):
     assert responce.status_code == 401
 
 
-async def test_abort_tokens(create_tables, client, refresh_token, access_token):
+async def test_abort_tokens(
+    create_tables, inserted_user, client, refresh_token, access_token
+):
     refr_token, user_id = refresh_token
-    client.cookies.set("access_token", access_token)
+    client.cookies.set("access_token", access_token[0])
     client.cookies.set("refresh_token", refr_token)
 
-    query_params = {
-        "id": user_id,
-        "name": fake.name(),
-        "email": fake.email(),
-        "hashed_password": fake.password(),
-        "is_admin": False,
-        "is_active": True,
-        "refresh_token": refr_token,
-    }
-
-    query = text(
-        """insert into "user"(id, name, email, hashed_password, is_admin, is_active, refresh_token) 
-        values(:id, :name, :email, :hashed_password, :is_admin, :is_active, :refresh_token)"""
-    )
-
-    async with session_maker() as session:
-        await session.execute(query, query_params)
-        await session.commit()
+    responce = await client.post("/auth/abort")
+    assert responce.status_code == 200
+    assert responce.cookies.get("refresh_token") is None
+    assert responce.cookies.get("access_token") is None

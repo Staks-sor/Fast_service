@@ -195,4 +195,4 @@ class TestAuthService:
         fake_uow.users._users[str(user_id)] = fake_record
 
         await AuthService.abort_refresh_token(user_id, fake_uow)
-        assert fake_uow.users._users[user_id]["refresh_token"] == ""
+        assert fake_uow.users._users[user_id]["refresh_token"] is None
