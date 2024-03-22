@@ -8,17 +8,16 @@ def main(page: ft.Page):
     page.title = "Главная"
 
     dlg_reg_user = ft.AlertDialog(adaptive=True,
-                         title=ft.Text("Регистрация", text_align="center"),
-
-                         actions=[
-                             ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9),
-                             ft.TextField(hint_text="Телефон", scale=0.9),
-                             ft.TextField(hint_text="Пароль", password=True, scale=0.9),
-                             ft.TextField(hint_text="говно", scale=0.9),
-                             ft.CupertinoActionSheetAction(
-                                    content=ft.Text("Зарегестрироваться")),
-                         ]
-                         )
+                                  title=ft.Text("Регистрация", text_align="center"),
+                                  actions=[
+                                      ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9),
+                                      ft.TextField(hint_text="Телефон", scale=0.9),
+                                      ft.TextField(hint_text="Пароль", password=True, scale=0.9),
+                                      ft.TextField(hint_text="говно", scale=0.9),
+                                      ft.CupertinoActionSheetAction(
+                                          content=ft.Text("Зарегестрироваться")),
+                                  ]
+                                  )
 
     def open_reg(e):
         page.dialog = dlg_reg_user
