@@ -6,11 +6,13 @@ logging.basicConfig(level=logging.DEBUG)
 
 def main(page: ft.Page):
     page.title = "Главная"
-
+    first_name = ft.Ref[ft.TextField]()
+    last_name = ft.Ref[ft.TextField]()
     dlg_reg_user = ft.AlertDialog(adaptive=True,
                                   title=ft.Text("Регистрация", text_align="center"),
+
                                   actions=[
-                                      ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9),
+                                      ft.TextField(hint_text="email", autofocus=True, col=10, scale=0.9, ),
                                       ft.TextField(hint_text="Телефон", scale=0.9),
                                       ft.TextField(hint_text="Пароль", password=True, scale=0.9),
 
@@ -18,6 +20,8 @@ def main(page: ft.Page):
                                           content=ft.Text("Зарегестрироваться")),
                                   ]
                                   )
+
+    print(ft.Text(f"{first_name.current.value}"))
     dlg_enter_user = ft.AlertDialog(adaptive=True,
                                     title=ft.Text("Вход", text_align="center"),
                                     actions=[
