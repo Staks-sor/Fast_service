@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar, Sequence, Any
 from abc import ABC, abstractmethod
+from typing import Any, Generic, Sequence, TypeVar
 
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +11,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 
 class AbstractRepository(ABC):
     @abstractmethod
-    async def get_one(self):
+    async def get_one(self, filter_by, filter_value):
         raise NotImplementedError
 
     @abstractmethod
@@ -42,10 +42,10 @@ class SQLAlchemyRepository(AbstractRepository, Generic[ModelType]):
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
-    async def get_one(self, filter_by, filter_value) -> ModelType:
+    async def get_one(self, filter_by, filter_value) -> ModelType | None:
         query = select(self.model).where(filter_by == filter_value)  # type: ignore
         result = await self.session.execute(query)
-        return result.scalar_one()
+        return result.scalar_one_or_none()
 
     async def get_all(self) -> Sequence[ModelType]:
         query = select(self.model)  # type: ignore

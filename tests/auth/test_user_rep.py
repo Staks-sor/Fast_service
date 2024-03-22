@@ -7,7 +7,7 @@ from sqlalchemy import insert, select, text
 from src.auth.models import User
 from src.auth.schemas import UserCreateSchema
 from src.auth.user_rep import UserRepository
-from tests.auth.conftest import session_maker
+from tests.conftest import session_maker
 
 fake = Faker()
 
@@ -60,7 +60,6 @@ async def inserted_users(create_tables):
 
 @pytest.mark.usefixtures("create_tables")
 class TestUserRepsitory:
-
     async def test_add_user(self, users):
         async with session_maker() as s:
             for user in users:
@@ -78,7 +77,6 @@ class TestUserRepsitory:
         new_email = "georgiy@mail.com"
 
         async with session_maker() as session:
-
             await UserRepository(session).update_one(
                 User.id, inserted_user, name=new_name, email=new_email
             )

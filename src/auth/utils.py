@@ -1,25 +1,24 @@
-from typing import Dict, Optional, Literal
-from datetime import timedelta, datetime, UTC
+from datetime import UTC, datetime, timedelta
+from typing import Dict, Literal, Optional
 
+import bcrypt
+import jwt
 from fastapi import HTTPException, Request, status
+from fastapi.openapi.models import OAuthFlowPassword
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
-from fastapi.openapi.models import OAuthFlowPassword
 
-import jwt
-import bcrypt
-
-from src.config import settings
 from src.auth.schemas import UserToken
+from src.config import settings
 
 
 class OAuthPasswordWithCookie(OAuth2):
     def __init__(
-            self,
-            tokenUrl: str,
-            scheme_name: str | None = None,
-            scopes: Optional[Dict[str, str]] = None,
-            auto_error: bool = True,
+        self,
+        tokenUrl: str,
+        scheme_name: str | None = None,
+        scopes: Optional[Dict[str, str]] = None,
+        auto_error: bool = True,
     ):
         if not scopes:
             scopes = {}
@@ -43,10 +42,12 @@ class OAuthPasswordWithCookie(OAuth2):
         return authorization
 
 
-def generate_token(
-        user_uuid: str, expires_in_minutes: int, type: Literal["access", "refresh"]
-):
-    expires = timedelta(minutes=expires_in_minutes)
+def generate_token(user_uuid: str, expires_in: int, type: Literal["access", "refresh"]):
+    expires = (
+        timedelta(minutes=expires_in)
+        if type == "access"
+        else timedelta(days=expires_in)
+    )
     payload = {"uuid": user_uuid, "exp": datetime.now(UTC) + expires}
     if type == "access":
         token = jwt.encode(payload, settings.jwt_access_secret, settings.jwt_algorithm)
@@ -82,6 +83,4 @@ def hash_password(password: str):
 
 
 def check_password(plain_password: str, hashed_password: str):
-    return bcrypt.checkpw(
-        plain_password.encode(), hashed_password.encode()
-    )
+    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
