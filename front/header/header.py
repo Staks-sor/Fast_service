@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.DEBUG)
 def main(page: ft.Page):
     page.title = "Главная"
 
-    dlg = ft.AlertDialog(adaptive=True,
+    dlg_reg_user = ft.AlertDialog(adaptive=True,
                          title=ft.Text("Регистрация", text_align="center"),
                          modal=True,
                          actions=[
@@ -21,8 +21,9 @@ def main(page: ft.Page):
                          )
 
     def open_reg(e):
-        page.dialog = dlg
-        dlg.open = True
+        page.dialog = dlg_reg_user
+        dlg_reg_user.open = True
+
         page.update()
 
     def route_change(route, login_function=None, registration_function=None, check_item_clicked=None):
