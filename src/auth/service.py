@@ -24,7 +24,7 @@ class AuthService:
         user_dict["hashed_password"] = utils.hash_password(user.password)
 
         async with uow:
-            await uow.users.add_one(user_dict)
+            await uow.users.add_one(user_dict, User.id)
             await uow.commit()
 
     @classmethod
@@ -53,7 +53,9 @@ class AuthService:
             refresh_token = utils.generate_token(
                 str(user_id), settings.refresh_token_expiration, "refresh"
             )
-            await uow.users.update_one(User.id, user_id, refresh_token=refresh_token)
+            await uow.users.update_one(
+                User.id, user_id, refresh_token=refresh_token
+            )
             await uow.commit()
             return Tokens(access_token, refresh_token)
 

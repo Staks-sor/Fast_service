@@ -35,14 +35,17 @@ class OAuthPasswordWithCookie(OAuth2):
         if not authorization:
             if self.auto_error:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="not authenticated"
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="not authenticated",
                 )
             else:
                 return None
         return authorization
 
 
-def generate_token(user_uuid: str, expires_in: int, type: Literal["access", "refresh"]):
+def generate_token(
+    user_uuid: str, expires_in: int, type: Literal["access", "refresh"]
+):
     expires = (
         timedelta(minutes=expires_in)
         if type == "access"
@@ -50,9 +53,13 @@ def generate_token(user_uuid: str, expires_in: int, type: Literal["access", "ref
     )
     payload = {"uuid": user_uuid, "exp": datetime.now(UTC) + expires}
     if type == "access":
-        token = jwt.encode(payload, settings.jwt_access_secret, settings.jwt_algorithm)
+        token = jwt.encode(
+            payload, settings.jwt_access_secret, settings.jwt_algorithm
+        )
     else:
-        token = jwt.encode(payload, settings.jwt_refresh_secret, settings.jwt_algorithm)
+        token = jwt.encode(
+            payload, settings.jwt_refresh_secret, settings.jwt_algorithm
+        )
     return token
 
 
