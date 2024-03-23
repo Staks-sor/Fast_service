@@ -11,11 +11,13 @@ def main(page: ft.Page):
         dlg_reg_user = ft.AlertDialog(
             adaptive=True,
             title=ft.Text("Регистрация", text_align="center"),
+
             actions=[
                 ft.TextField(label="email", autofocus=True, col=10, scale=0.9),
                 ft.TextField(label="Телефон", scale=0.9),
                 ft.TextField(label="Пароль", password=True, scale=0.9),
-                ft.OutlinedButton(content=ft.Text("Регистрация"), scale=0.9),
+                ft.OutlinedButton(content=ft.Text("Регистрация"),
+                                  on_click=lambda e: registrator(e, dlg_reg_user), scale=0.9)
             ]
         )
 
@@ -40,6 +42,11 @@ def main(page: ft.Page):
         page.dialog = dlg_enter_user
         dlg_enter_user.open = True
         page.update()
+
+    def registrator(e, dlg_reg_user):
+        print(dlg_reg_user.actions[0].value, "Это имеил")
+        print(dlg_reg_user.actions[1].value, "Это телефон")
+        print(dlg_reg_user.actions[2].value, "Это пароль")
 
     def route_change(route, login_function=None, registration_function=None, check_item_clicked=None):
         dlg_reg_user, dlg_enter_user = modal_window()
