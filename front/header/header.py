@@ -1,6 +1,8 @@
 import flet as ft
 import logging
 
+import requests
+
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -13,8 +15,8 @@ def main(page: ft.Page):
             title=ft.Text("Регистрация", text_align="center"),
 
             actions=[
-                ft.TextField(label="email", autofocus=True, col=10, scale=0.9),
-                ft.TextField(label="Телефон", scale=0.9),
+                ft.TextField(label="Имя", autofocus=True, col=10, scale=0.9),
+                ft.TextField(label="email", scale=0.9),
                 ft.TextField(label="Пароль", password=True, scale=0.9),
                 ft.OutlinedButton(content=ft.Text("Регистрация"),
                                   on_click=lambda e: registrator(e, dlg_reg_user), scale=0.9)
@@ -44,9 +46,27 @@ def main(page: ft.Page):
         page.update()
 
     def registrator(e, dlg_reg_user):
-        print(dlg_reg_user.actions[0].value, "Это имеил")
-        print(dlg_reg_user.actions[1].value, "Это телефон")
-        print(dlg_reg_user.actions[2].value, "Это пароль")
+
+        name = dlg_reg_user.actions[0].value
+        email = dlg_reg_user.actions[1].value
+        password = dlg_reg_user.actions[2].value
+
+        url = "http://127.0.0.1:8000/auth/register"
+        data = {
+            "name": f"{name}",
+            "email": f"{email}",
+            "password": f"{password}"
+
+        }
+
+        response = requests.post(url, json=data)
+        print(response.json)
+        if response.status_code == 200:
+            print("Пользователь успешно зарегистрирован!")
+        else:
+            print("Ошибка при регистрации пользователя:", response.text)
+        dlg_reg_user.open = False
+        page.update()
 
     def route_change(route, login_function=None, registration_function=None, check_item_clicked=None):
         dlg_reg_user, dlg_enter_user = modal_window()
