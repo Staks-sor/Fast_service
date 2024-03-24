@@ -64,37 +64,30 @@ def main(page: ft.Page):
         response = requests.post(url, json=data)
         print(response.json)
         response_json = json.loads(response.text)
-        error_description = response_json['detail'][0]['msg']
-        dlg_accses_registration = ft.AlertDialog(
-            adaptive=True,
-            title=ft.Text("Вы успешно зарегестрированы", text_align="center"))
-        dlg_error_regitration = ft.AlertDialog(
-            adaptive=True,
 
-            title=ft.Text(f"{error_description}", text_align="center"))
         if response.status_code == 200:
+            dlg_accses_registration = ft.AlertDialog(
+                adaptive=True,
+                title=ft.Text("Вы успешно зарегестрированы", text_align="center"))
             page.dialog = dlg_accses_registration
             dlg_accses_registration.open = True
             page.update()
             return dlg_accses_registration
 
         else:
+            error_description = response_json['detail'][0]['msg']
+            dlg_error_regitration = ft.AlertDialog(
+                adaptive=True,
+
+                title=ft.Text(f"{error_description}", text_align="center"))
             page.dialog = dlg_error_regitration
             dlg_error_regitration.open = True
             page.update()
             time.sleep(2)
-            page.dialog = dlg_reg_user
-            dlg_reg_user.open = True
-            page.update()
+            open_reg(e, dlg_reg_user)
 
             print("Ошибка при регистрации пользователя:", response.text)
-            return dlg_accses_registration
-
-
-        dlg_reg_user.open = False
-        page.update()
-
-
+            return dlg_error_regitration
 
     def route_change(route, login_function=None, registration_function=None, check_item_clicked=None):
         dlg_reg_user, dlg_enter_user = modal_window()
