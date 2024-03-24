@@ -76,7 +76,6 @@ def main(page: ft.Page):
             page.dialog = dlg_accses_registration
             dlg_accses_registration.open = False
             page.update()
-
             return dlg_accses_registration
 
         else:
