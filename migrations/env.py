@@ -1,19 +1,21 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from src.database import Base
-from src.auth.models import User
+from src.auth.models import User  # noqa: F401
 from src.config import settings
+from src.database import Base
+from src.masters.models import Master  # noqa: F401
+from src.works.models import Supply, Work  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 section = config.config_ini_section
-config.set_section_option(section, "db_dsn", settings.postgres_dsn)
+config.set_section_option(
+    section, "db_dsn", settings.postgres_dsn + "?async_fallback=True"
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -70,7 +72,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()
