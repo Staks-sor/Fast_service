@@ -12,4 +12,5 @@ class MasterService:
             master_id = await uow.masters.add_one(
                 master.model_dump(), Master.id
             )
+            await uow.commit()
             return master_id

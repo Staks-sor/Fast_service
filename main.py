@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from src import include_routers
 from src.errors import include_errors_handlers
 from src.masters.router import router as masters_router
+from src.orders.router import router as order_router
 from src.works.router import work_router
 
 
@@ -14,6 +15,8 @@ def get_app() -> FastAPI:
     )
     app.include_router(work_router)
     app.include_router(masters_router)
+    app.include_router(order_router)
+
     include_routers(app)
     include_errors_handlers(app)
 

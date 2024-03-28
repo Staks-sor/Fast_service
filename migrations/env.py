@@ -7,6 +7,7 @@ from src.auth.models import User  # noqa: F401
 from src.config import settings
 from src.database import Base
 from src.masters.models import Master  # noqa: F401
+from src.orders.models import Order, OrderWorks  # noqa: F401
 from src.works.models import Supply, Work  # noqa: F401
 
 # this is the Alembic Config object, which provides

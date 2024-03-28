@@ -16,6 +16,9 @@ class Work(Base):
     supplies: Mapped[list["Supply"]] = relationship(
         back_populates="works", secondary="work_supply"
     )
+    orders: Mapped[list["Order"]] = relationship(  # type: ignore  # noqa: F821
+        back_populates="works", secondary="orders_works"
+    )
 
 
 class Supply(Base):

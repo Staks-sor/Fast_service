@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
 
@@ -16,3 +16,5 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     refresh_token: Mapped[str] = mapped_column(nullable=True)
+
+    orders: Mapped[list["Order"]] = relationship(back_populates="user")  # type: ignore  # noqa: F821
