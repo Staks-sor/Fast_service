@@ -20,6 +20,7 @@ class WorkService:
 
             await uow.works.add_supplies_to_work(work_id, supplies)
             await uow.commit()
+            return str(work_id)
 
     @classmethod
     async def get_all_works(cls, uow: UoWInterface):
@@ -48,9 +49,11 @@ class SupplyService:
             return supply_title
 
     @classmethod
-    async def get_all_supplies(cls, uow: UoWInterface):
+    async def get_all_supplies(
+        cls, uow: UoWInterface, limit: int, offset: int
+    ):
         async with uow:
-            supplies = await uow.supplies.get_all()
+            supplies = await uow.supplies.get_all(limit, offset)
             dto = [
                 CreateSupplySchema.model_validate(supply)
                 for supply in supplies

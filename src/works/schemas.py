@@ -31,3 +31,7 @@ list_of_supplies = TypeAdapter(list[CreateSupplySchema])
 
 class SupplyResponceSchema(CreateSupplySchema):
     works: list[WorkResponceSchema]
+
+
+class WorkCreatedSchema(BaseModel):
+    work_id: str

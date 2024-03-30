@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
@@ -53,7 +53,9 @@ class SupplyRepository(SQLAlchemyRepository[Supply]):
         result = await self.session.execute(query)
         return result.unique().scalar_one_or_none()
 
-    async def get_supplies_by_titles(self, titles: list[str]):
+    async def get_supplies_by_titles(
+        self, titles: list[str]
+    ) -> Sequence[Supply]:
         query = select(self.model).where(self.model.title.in_(titles))
         result = await self.session.execute(query)
         return result.scalars().all()
