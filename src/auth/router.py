@@ -1,13 +1,18 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.auth.dependencies import UowDep
+from src.auth.dependencies import UowDep, get_current_user
 from src.auth.schemas import UserCreateSchema, UserResponse
 from src.auth.service import AuthService
-from src.auth.dependencies import get_current_user
-
 from src.config import settings
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -45,7 +50,9 @@ async def refresh_tokens(request: Request, response: Response, uow: UowDep):
     current_token = request.cookies.get("refresh_token")
 
     if not current_token:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="invalid token")
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="invalid token"
+        )
 
     new_tokens = await AuthService.refresh_tokens(current_token, uow)
 

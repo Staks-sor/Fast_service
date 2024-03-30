@@ -10,7 +10,9 @@ from src.uow import UoW, UoWInterface
 
 UowDep = Annotated[UoWInterface, Depends(UoW)]
 
-oauth_scheme = utils.OAuthPasswordWithCookie("auth/login", auto_error=True)
+oauth_scheme = utils.OAuthPasswordWithCookie(
+    tokenUrl="auth/login", auto_error=True
+)
 
 
 async def get_current_user(
@@ -18,6 +20,8 @@ async def get_current_user(
 ) -> UserResponse:
     payload = utils.decode_token(token, "access")
     if payload.exp < datetime.now(UTC):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="not authenticated")
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, detail="not authenticated"
+        )
     user = await AuthService.get_user(payload.uuid, uow)
     return user

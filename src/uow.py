@@ -2,10 +2,17 @@ from abc import abstractmethod
 
 from src.auth.user_rep import UserRepository
 from src.database import session
+from src.masters.repository import MasterRepository
+from src.orders.repository import OrderRepository
+from src.works.repositories import SupplyRepository, WorkRepository
 
 
 class UoWInterface:
     users: UserRepository
+    works: WorkRepository
+    supplies: SupplyRepository
+    masters: MasterRepository
+    orders: OrderRepository
 
     async def __aenter__(self):
         raise NotImplementedError
@@ -29,6 +36,10 @@ class UoW(UoWInterface):
     async def __aenter__(self):
         self.session = self.sessionmaker()
         self.users = UserRepository(self.session)
+        self.works = WorkRepository(self.session)
+        self.supplies = SupplyRepository(self.session)
+        self.masters = MasterRepository(self.session)
+        self.orders = OrderRepository(self.session)
         return self
 
     async def __aexit__(self, *args):

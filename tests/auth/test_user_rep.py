@@ -30,9 +30,15 @@ async def inserted_user():
 @pytest.fixture(scope="function")
 def users():
     users = [
-        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
-        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
-        UserCreateSchema(name=fake.name(), email=fake.email(), password="pass1234"),
+        UserCreateSchema(
+            name=fake.name(), email=fake.email(), password="pass1234"
+        ),
+        UserCreateSchema(
+            name=fake.name(), email=fake.email(), password="pass1234"
+        ),
+        UserCreateSchema(
+            name=fake.name(), email=fake.email(), password="pass1234"
+        ),
     ]
     return users
 
@@ -65,7 +71,7 @@ class TestUserRepsitory:
             for user in users:
                 user_dict = user.model_dump(exclude="password")
                 user_dict["hashed_password"] = "psdafasdf"
-                await UserRepository(s).add_one(user_dict)
+                await UserRepository(s).add_one(user_dict, User.id)
 
             stmt = text('select count(*) from "user";')
             res = await s.execute(stmt)
@@ -89,7 +95,7 @@ class TestUserRepsitory:
 
     async def test_user_delete(self, inserted_user):
         async with session_maker() as session:
-            await UserRepository(session).delete_one(inserted_user)
+            await UserRepository(session).delete_one(User.id, inserted_user)
 
             query = select(User).where(User.id == inserted_user)
             result = await session.execute(query)
