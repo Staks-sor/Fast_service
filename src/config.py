@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    MODE: str
     model_config = SettingsConfigDict(env_file="src/.env", extra="allow")
 
     postgres_password: str
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
     @property
     def postgres_dsn(self):
         return f"postgresql+asyncpg://{self.postgres_username}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+
+
+class Config:
+    env_file = '.env'
 
 
 settings = Settings()  # type: ignore
