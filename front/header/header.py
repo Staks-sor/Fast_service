@@ -16,7 +16,7 @@ def main(page: ft.Page):
         # Окно для регистрации
         dlg_reg_user = ft.AlertDialog(
             adaptive=True,
-            title=ft.Text("Регистрация", text_align="center"),
+            title=ft.Text("Регистрация", text_align=TextAlign.CENTER),
             actions=[
                 ft.TextField(label="Имя", autofocus=True, col=10, scale=0.9),
                 ft.TextField(label="Email", scale=0.9),
@@ -31,7 +31,7 @@ def main(page: ft.Page):
         # Окно для входа
         dlg_enter_user = ft.AlertDialog(
             adaptive=True,
-            title=ft.Text("Вход", text_align="center"),
+            title=ft.Text("Вход", text_align=TextAlign.CENTER),
             actions=[
                 ft.TextField(hint_text="Email", autofocus=True, col=10, scale=0.9),
                 ft.TextField(hint_text="Пароль", password=True, scale=0.9),
@@ -60,21 +60,25 @@ def main(page: ft.Page):
         response = requests.post(url, json=data)
         response_json = response.json()
         if response.status_code == 200:
+
             # Успешная регистрация
             dlg_success_registration = ft.AlertDialog(
                 adaptive=True,
-                title=ft.Text("Вы успешно зарегистрированы", text_align="center")
+                title=ft.Text("Вы успешно зарегистрированы", text_align=TextAlign.CENTER),
+
             )
+
             open_dialog(dlg_success_registration)
             time.sleep(1)
             dlg_success_registration.open = False
             page.update()
+            page.go("/new_page")
         else:
             # Ошибка при регистрации
             error_description = response_json['detail'][0]['msg']
             dlg_error_registration = ft.AlertDialog(
                 adaptive=True,
-                title=ft.Text(error_description, text_align="center")
+                title=ft.Text(error_description, text_align=TextAlign.CENTER)
             )
             open_dialog(dlg_error_registration)
             time.sleep(2)
@@ -82,47 +86,82 @@ def main(page: ft.Page):
             print("Ошибка при регистрации пользователя:", response.text)
 
     # Функция для изменения маршрута
-    def route_change(e: RouteChangeEvent) -> None:
-        # Создаем модальные окна
-        dlg_reg_user, dlg_enter_user = modal_window()
-        # Очищаем предыдущие представления
-        page.views.clear()
-        # Добавляем новое представление
-        page.views.append(
-            ft.View(
-                route="/",
-                controls=[
-                    # Футер
-                    ft.BottomAppBar(
-                        bgcolor=ft.colors.SURFACE_VARIANT,
-                        shape=ft.NotchShape.CIRCULAR,
-                        height=45,
-                        content=Text("this is footer", size=10, text_align=TextAlign.CENTER)
-                    ),
-                    # Верхняя панель приложения
-                    ft.AppBar(
-                        title=ft.Text("Автосервис"),
-                        bgcolor=ft.colors.SURFACE_VARIANT,
-                        actions=[
-                            ft.IconButton(ft.icons.WB_SUNNY_OUTLINED),
-                            # Кнопка "Регистрация"
-                            ft.OutlinedButton(
-                                content=ft.Text("Регистрация"),
-                                on_click=lambda e: open_dialog(dlg_reg_user),
-                                scale=0.9
-                            ),
-                            # Кнопка "Вход"
-                            ft.OutlinedButton(
-                                content=ft.Text("Вход"),
-                                on_click=lambda e: open_dialog(dlg_enter_user),
-                                scale=0.9
-                            )
-                        ],
-                    ),
-                ],
-            )
+    def create_main_view(dlg_reg_user, dlg_enter_user):
+        return ft.View(
+            route="/",
+            controls=[
+                # Футер
+                ft.BottomAppBar(
+                    bgcolor=ft.colors.SURFACE_VARIANT,
+                    shape=ft.NotchShape.CIRCULAR,
+                    height=45,
+                    content=Text("this is footer", size=10, text_align=TextAlign.CENTER)
+                ),
+                # Верхняя панель приложения
+                ft.AppBar(
+                    title=ft.Text("Автосервис"),
+                    bgcolor=ft.colors.SURFACE_VARIANT,
+                    actions=[
+                        ft.IconButton(ft.icons.WB_SUNNY_OUTLINED),
+                        # Кнопка "Регистрация"
+                        ft.OutlinedButton(
+                            content=ft.Text("Регистрация"),
+                            on_click=lambda e: open_dialog(dlg_reg_user),
+                            scale=0.9
+                        ),
+                        # Кнопка "Вход"
+                        ft.OutlinedButton(
+                            content=ft.Text("Вход"),
+                            on_click=lambda e: open_dialog(dlg_enter_user),
+                            scale=0.9
+                        )
+                    ],
+                ),
+            ],
         )
+
+    def create_new_page_view():
+        return ft.View(
+            route="/new_page",
+            controls=[
+                # Футер
+                ft.BottomAppBar(
+                    bgcolor=ft.colors.SURFACE_VARIANT,
+                    shape=ft.NotchShape.CIRCULAR,
+                    height=45,
+                    content=Text("this is footer", size=10, text_align=TextAlign.CENTER)
+                ),
+                # Верхняя панель приложения
+                ft.AppBar(
+                    title=ft.Text("Новая страница"),
+                    bgcolor=ft.colors.SURFACE_VARIANT,
+                    actions=[
+                        ft.IconButton(ft.icons.PHOTO),
+                        # Кнопка "Личный кабинет"
+                        ft.OutlinedButton(
+                            content=ft.Text("Личный кабинет"),
+                            scale=0.9
+                        )
+                    ],
+                ),
+            ],
+        )
+
+    def update_page(views):
+        page.views.clear()
+        page.views.extend(views)
         page.update()
+
+    def route_change(e: RouteChangeEvent) -> None:
+        # Создаем модальные окна для основной страницы
+        dlg_reg_user, dlg_enter_user = modal_window()
+
+        # Создаем представления для основной страницы и новой страницы
+        main_view = create_main_view(dlg_reg_user, dlg_enter_user)
+        new_page_view = create_new_page_view()
+
+        # Обновляем страницу с новыми представлениями
+        update_page([main_view, new_page_view])
 
     # Функция для удаления представления из стека
     def view_pop(view):
