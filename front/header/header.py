@@ -121,6 +121,7 @@ def main(page: ft.Page):
         )
 
     def create_new_page_view():
+
         return ft.View(
             route="/new_page",
             controls=[
