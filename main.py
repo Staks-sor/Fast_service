@@ -10,7 +10,7 @@ from src.masters.router import router as masters_router
 from src.orders.router import router as order_router
 from src.works.router import work_router
 
-
+print("gfgfgf")
 def get_app() -> FastAPI:
     app = FastAPI(
         title="Auto-service app",
